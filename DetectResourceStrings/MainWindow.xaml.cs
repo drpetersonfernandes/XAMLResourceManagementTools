@@ -60,7 +60,7 @@ public partial class MainWindow
     /// </summary>
     private void UpdateCompareButtonState()
     {
-        CompareButton.IsEnabled = !string.IsNullOrEmpty(InputFolderTextBox.Text) && 
+        CompareButton.IsEnabled = !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
                                  !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
                                  !string.IsNullOrEmpty(OutputFolderTextBox.Text);
     }
@@ -77,7 +77,7 @@ public partial class MainWindow
         // Validate inputs
         if (string.IsNullOrEmpty(inputFolder) || string.IsNullOrEmpty(resourceFilePath) || string.IsNullOrEmpty(reportPath))
         {
-            System.Windows.MessageBox.Show("Please select all required folders and files.", 
+            System.Windows.MessageBox.Show("Please select all required folders and files.",
                 "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -168,12 +168,12 @@ public partial class MainWindow
                 }
             }
 
-            System.Windows.MessageBox.Show($"Report generated at: {reportFilePath}", 
+            System.Windows.MessageBox.Show($"Report generated at: {reportFilePath}",
                 "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"An error occurred: {ex.Message}", 
+            System.Windows.MessageBox.Show($"An error occurred: {ex.Message}",
                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
@@ -191,7 +191,7 @@ public partial class MainWindow
         BrowseInputButton.IsEnabled = enabled;
         BrowseResourceButton.IsEnabled = enabled;
         BrowseOutputButton.IsEnabled = enabled;
-        CompareButton.IsEnabled = enabled && !string.IsNullOrEmpty(InputFolderTextBox.Text) && 
+        CompareButton.IsEnabled = enabled && !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
                                  !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
                                  !string.IsNullOrEmpty(OutputFolderTextBox.Text);
     }

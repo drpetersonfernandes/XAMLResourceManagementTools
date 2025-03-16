@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Diagnostics;
 
 namespace DetectMissingKeys;
 
@@ -11,6 +12,7 @@ public partial class MainWindow
     private string _originalFilePath = string.Empty;
     private string _inputFolderPath = string.Empty;
     private string _outputFolderPath = string.Empty;
+    private string _reportFilePath = string.Empty;
 
     public MainWindow()
     {
@@ -30,6 +32,7 @@ public partial class MainWindow
             _originalFilePath = openFileDialog.FileName;
             Console.WriteLine($"Original file selected: {_originalFilePath}");
             StatusTextBlock.Text = $"Original file selected: {_originalFilePath}";
+            OriginalFileTextBox.Text = _originalFilePath;
         }
     }
 
@@ -42,6 +45,7 @@ public partial class MainWindow
             _inputFolderPath = folderDialog.SelectedPath;
             Console.WriteLine($"Input folder selected: {_inputFolderPath}");
             StatusTextBlock.Text = $"Input folder selected: {_inputFolderPath}";
+            InputFolderTextBox.Text = _inputFolderPath;
         }
     }
 
@@ -54,6 +58,7 @@ public partial class MainWindow
             _outputFolderPath = folderDialog.SelectedPath;
             Console.WriteLine($"Output folder selected: {_outputFolderPath}");
             StatusTextBlock.Text = $"Output folder selected: {_outputFolderPath}";
+            OutputFolderTextBox.Text = _outputFolderPath;
         }
     }
 
@@ -90,22 +95,32 @@ public partial class MainWindow
                     missingKeys.ForEach(key => report.AppendLine($"    - {key}"));
                     Console.WriteLine($"Missing keys in {Path.GetFileName(file)}: {string.Join(", ", missingKeys)}");
                 }
+
                 if (extraKeys.Count != 0)
                 {
                     report.AppendLine("  Extra Keys:");
                     extraKeys.ForEach(key => report.AppendLine($"    - {key}"));
                     Console.WriteLine($"Extra keys in {Path.GetFileName(file)}: {string.Join(", ", extraKeys)}");
                 }
+
                 if (missingKeys.Count == 0 && extraKeys.Count == 0)
                 {
                     report.AppendLine("  All keys matched.");
                     Console.WriteLine($"All keys matched for file: {Path.GetFileName(file)}");
                 }
+
                 report.AppendLine();
             }
 
             var outputFilePath = Path.Combine(_outputFolderPath, "XamlKeyComparisonReport.txt");
             File.WriteAllText(outputFilePath, report.ToString());
+
+            _reportFilePath = outputFilePath;
+            StatusTextBlock.Text = $"Report generated successfully: {Path.GetFileName(_reportFilePath)}";
+
+            // Enable the open report button
+            OpenReportButton.IsEnabled = true;
+
             StatusTextBlock.Text = $"Report generated successfully: {outputFilePath}";
             Console.WriteLine($"Report saved at: {outputFilePath}");
         }
@@ -113,6 +128,30 @@ public partial class MainWindow
         {
             StatusTextBlock.Text = $"Error: {ex.Message}";
             Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void OpenReportButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_reportFilePath) && File.Exists(_reportFilePath))
+        {
+            try
+            {
+                // Use Process.Start to open the file with the default application
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = _reportFilePath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                StatusTextBlock.Text = $"Error opening report: {ex.Message}";
+            }
+        }
+        else
+        {
+            StatusTextBlock.Text = "Report file not found. Please generate the report first.";
         }
     }
 

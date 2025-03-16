@@ -1,7 +1,9 @@
 ﻿<Window x:Class="DetectMissingKeys.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="XAML Key Comparer" Height="550" Width="650">
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d"
+        Title="XAML Key Comparer" Height="600" Width="650">
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -52,7 +54,7 @@
                      Grid.Column="0" 
                      IsReadOnly="True"
                      Padding="5,3"
-                     Text="{Binding OriginalFilePath, Mode=OneWay}"/>
+                     Text="{Binding OriginalFilePath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
             <Button Name="SelectOriginalFileButton" 
                     Grid.Column="1"
                     Content="Browse..." 
@@ -83,7 +85,7 @@
                      Grid.Column="0" 
                      IsReadOnly="True"
                      Padding="5,3"
-                     Text="{Binding InputFolderPath, Mode=OneWay}"/>
+                     Text="{Binding InputFolderPath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
             <Button Name="SelectInputFolderButton" 
                     Grid.Column="1" 
                     Content="Browse..." 
@@ -114,7 +116,7 @@
                      Grid.Column="0" 
                      IsReadOnly="True"
                      Padding="5,3"
-                     Text="{Binding OutputFolderPath, Mode=OneWay}"/>
+                     Text="{Binding OutputFolderPath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
             <Button Name="SelectOutputFolderButton" 
                     Grid.Column="1" 
                     Content="Browse..." 
@@ -133,6 +135,15 @@
                     HorizontalAlignment="Center"
                     Margin="0,10,0,15"
                     Click="GenerateReportButton_Click"/>
+            
+            <Button Name="OpenReportButton"
+                    Content="Open Report" 
+                    Width="120" 
+                    Height="30"
+                    Margin="0,10,0,30"
+                    IsEnabled="False"
+                    HorizontalAlignment="Center"
+                    Click="OpenReportButton_Click"/>
             
             <TextBlock TextWrapping="Wrap" 
                        TextAlignment="Center" 

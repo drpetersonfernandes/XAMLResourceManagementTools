@@ -9,6 +9,8 @@ namespace DetectMissMatchedResourceStrings;
 
 public partial class MainWindow
 {
+    private string? _lastGeneratedReportPath;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -45,7 +47,7 @@ public partial class MainWindow
     /// </summary>
     private void UpdateProcessButtonState()
     {
-        ProcessButton.IsEnabled = !string.IsNullOrEmpty(InputFolderTextBox.Text) && 
+        ProcessButton.IsEnabled = !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
                                   !string.IsNullOrEmpty(OutputFolderTextBox.Text);
     }
 
@@ -106,6 +108,7 @@ public partial class MainWindow
                             {
                                 resourceDictionary[key] = new HashSet<string>(StringComparer.Ordinal);
                             }
+
                             resourceDictionary[key].Add(value);
                         }
                     }
@@ -141,6 +144,7 @@ public partial class MainWindow
                         {
                             await writer.WriteLineAsync($" - {val}");
                         }
+
                         await writer.WriteLineAsync(new string('-', 40));
                     }
                 }
@@ -149,6 +153,9 @@ public partial class MainWindow
                     await writer.WriteLineAsync("No mismatched resource strings were found.");
                 }
             }
+
+            _lastGeneratedReportPath = Path.Combine(reportFolder, "MismatchReport.txt");
+            OpenReportButton.IsEnabled = File.Exists(_lastGeneratedReportPath);
 
             System.Windows.MessageBox.Show($"Report generated successfully at:\n{reportFilePath}",
                 "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -166,13 +173,44 @@ public partial class MainWindow
     }
 
     /// <summary>
+    /// Event handler for the Open Report button
+    /// </summary>
+    private void OpenReportButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_lastGeneratedReportPath) && File.Exists(_lastGeneratedReportPath))
+        {
+            try
+            {
+                // Open the report file with the default application
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = _lastGeneratedReportPath,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"Could not open the report: {ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+        else
+        {
+            System.Windows.MessageBox.Show("No report has been generated yet or the file cannot be found.",
+                "Report Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    /// <summary>
     /// Helper method to enable or disable all controls during processing
     /// </summary>
     private void SetControlsEnabled(bool enabled)
     {
         BrowseInputButton.IsEnabled = enabled;
         BrowseOutputButton.IsEnabled = enabled;
-        ProcessButton.IsEnabled = enabled;
+        ProcessButton.IsEnabled = enabled && !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
+                                  !string.IsNullOrEmpty(OutputFolderTextBox.Text);
+        // No need to enable/disable OpenReportButton here as it depends on report existence
     }
 
     /// <summary>
@@ -190,7 +228,7 @@ public partial class MainWindow
         }
         else
         {
-            return null;            
+            return null;
         }
     }
 }
@@ -206,6 +244,7 @@ public class StringNotEmptyToBoolConverter : IValueConverter
         {
             return !string.IsNullOrWhiteSpace(stringValue);
         }
+
         return false;
     }
 
