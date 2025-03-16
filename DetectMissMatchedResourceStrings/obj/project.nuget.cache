@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "upW6UUVVgng=",
+  "dgSpecHash": "AJ8Z8wtvOKY=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Peterson\\Documents\\Sincronizar\\source\\repos\\CSharp_XAMLResourceManagementTools\\DetectMissMatchedResourceStrings\\DetectMissMatchedResourceStrings.csproj",
+  "projectFilePath": "C:\\Sincronizar\\source\\repos\\CSharp_XAMLResourceManagementTools\\DetectMissMatchedResourceStrings\\DetectMissMatchedResourceStrings.csproj",
   "expectedPackageFiles": [],
   "logs": []
 }

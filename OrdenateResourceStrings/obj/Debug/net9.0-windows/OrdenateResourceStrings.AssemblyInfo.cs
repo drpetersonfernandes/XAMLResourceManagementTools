@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("OrdenateResourceStrings")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fea0f3afd8fbf6e595f848220955a5258647e714")]
 [assembly: System.Reflection.AssemblyProductAttribute("OrdenateResourceStrings")]
 [assembly: System.Reflection.AssemblyTitleAttribute("OrdenateResourceStrings")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

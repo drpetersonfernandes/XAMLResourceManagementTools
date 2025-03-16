@@ -4,16 +4,16 @@
 winexe
 C#
 .cs
-C:\Users\Peterson\Documents\Sincronizar\source\repos\CSharp_XAMLResourceManagementTools\DetectMissingKeys\obj\Debug\net9.0-windows\
+C:\Sincronizar\source\repos\CSharp_XAMLResourceManagementTools\DetectMissingKeys\obj\Debug\net9.0-windows\
 DetectMissingKeys
 none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP
-C:\Users\Peterson\Documents\Sincronizar\source\repos\CSharp_XAMLResourceManagementTools\DetectMissingKeys\App.xaml
+C:\Sincronizar\source\repos\CSharp_XAMLResourceManagementTools\DetectMissingKeys\App.xaml
 11407045341
 
 41727107226
-209-1953029325
+209-1152942848
 MainWindow.xaml;
 
 False
