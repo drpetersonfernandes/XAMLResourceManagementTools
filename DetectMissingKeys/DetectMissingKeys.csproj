@@ -10,7 +10,7 @@
         <IsPackable>false</IsPackable>
         <AssemblyVersion>1.0</AssemblyVersion>
         <FileVersion>1.0</FileVersion>
-        <NeutralLanguage>en-US</NeutralLanguage>
+        <NeutralLanguage>en</NeutralLanguage>
     </PropertyGroup>
 
 <ItemGroup>

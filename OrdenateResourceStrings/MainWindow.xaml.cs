@@ -60,7 +60,7 @@ public partial class MainWindow
                 // Separate header, resource strings, and footer
                 var headerLines = lines.TakeWhile(line => !line.Contains("<system:String x:Key=")).ToList();
                 var resourceLines = lines.SkipWhile(line => !line.Contains("<system:String x:Key="))
-                    .TakeWhile(line => !line.Trim().StartsWith("</ResourceDictionary>"))
+                    .TakeWhile(line => !line.Trim().StartsWith("</ResourceDictionary>", StringComparison.Ordinal))
                     .ToList();
                 var footerLines = lines.Skip(headerLines.Count + resourceLines.Count).ToList();
 
@@ -83,7 +83,6 @@ public partial class MainWindow
         {
             System.Windows.MessageBox.Show($"An error occurred: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
-
     }
 
     private static string ExtractKey(string line)

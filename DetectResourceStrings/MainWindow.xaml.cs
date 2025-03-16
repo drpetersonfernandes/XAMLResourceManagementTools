@@ -5,11 +5,15 @@ using System.Windows.Forms;
 using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 using System.Windows.Data;
 using System.Globalization;
+using System.Diagnostics; // For Process.Start
+using MessageBox = System.Windows.MessageBox;
 
 namespace DetectResourceStrings;
 
 public partial class MainWindow
 {
+    private string? _reportFilePath;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -61,8 +65,8 @@ public partial class MainWindow
     private void UpdateCompareButtonState()
     {
         CompareButton.IsEnabled = !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
-                                 !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
-                                 !string.IsNullOrEmpty(OutputFolderTextBox.Text);
+                                  !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
+                                  !string.IsNullOrEmpty(OutputFolderTextBox.Text);
     }
 
     /// <summary>
@@ -77,7 +81,7 @@ public partial class MainWindow
         // Validate inputs
         if (string.IsNullOrEmpty(inputFolder) || string.IsNullOrEmpty(resourceFilePath) || string.IsNullOrEmpty(reportPath))
         {
-            System.Windows.MessageBox.Show("Please select all required folders and files.",
+            MessageBox.Show("Please select all required folders and files.",
                 "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
@@ -86,7 +90,7 @@ public partial class MainWindow
         SetControlsEnabled(false);
 
         var list1 = new List<string>();
-        List<string> list2 = new List<string>();
+        var list2 = new List<string>();
 
         try
         {
@@ -126,7 +130,7 @@ public partial class MainWindow
                 catch (Exception ex)
                 {
                     // Log or handle the error for specific files
-                    System.Diagnostics.Debug.WriteLine($"Error reading file {file}: {ex.Message}");
+                    Debug.WriteLine($"Error reading file {file}: {ex.Message}");
                 }
             }
 
@@ -168,12 +172,15 @@ public partial class MainWindow
                 }
             }
 
-            System.Windows.MessageBox.Show($"Report generated at: {reportFilePath}",
+            _reportFilePath = reportFilePath;
+            UpdateReportButtonState();
+
+            MessageBox.Show($"Report generated at: {reportFilePath}",
                 "Success", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         catch (Exception ex)
         {
-            System.Windows.MessageBox.Show($"An error occurred: {ex.Message}",
+            MessageBox.Show($"An error occurred: {ex.Message}",
                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
         finally
@@ -182,6 +189,26 @@ public partial class MainWindow
             SetControlsEnabled(true);
         }
     }
+
+    private void OpenReportButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_reportFilePath) && File.Exists(_reportFilePath))
+        {
+            // Open the file with the default application
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = _reportFilePath,
+                UseShellExecute = true
+            });
+        }
+        else
+        {
+            MessageBox.Show("Report file not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            // Update button state in the case file was deleted
+            UpdateReportButtonState();
+        }
+    }
+
 
     /// <summary>
     /// Helper method to enable or disable all controls during processing
@@ -192,8 +219,8 @@ public partial class MainWindow
         BrowseResourceButton.IsEnabled = enabled;
         BrowseOutputButton.IsEnabled = enabled;
         CompareButton.IsEnabled = enabled && !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
-                                 !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
-                                 !string.IsNullOrEmpty(OutputFolderTextBox.Text);
+                                  !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
+                                  !string.IsNullOrEmpty(OutputFolderTextBox.Text);
     }
 
     private static string? SelectFolder(string description)
@@ -224,6 +251,12 @@ public partial class MainWindow
         return null;
     }
 
+    private void UpdateReportButtonState()
+    {
+        // Enable button only if the report file exists
+        OpenReportButton.IsEnabled = !string.IsNullOrEmpty(_reportFilePath) && File.Exists(_reportFilePath);
+    }
+
     [GeneratedRegex("x:Key=\"(.*?)\"")]
     private static partial Regex MyRegex();
 }
@@ -239,6 +272,7 @@ public class StringNotEmptyToBoolConverter : IValueConverter
         {
             return !string.IsNullOrWhiteSpace(stringValue);
         }
+
         return false;
     }
 
