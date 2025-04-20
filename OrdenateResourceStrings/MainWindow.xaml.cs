@@ -61,16 +61,23 @@ public partial class MainWindow
                 var headerLines = lines.TakeWhile(line => !line.Contains("<system:String x:Key=")).ToList();
                 var resourceLines = lines.SkipWhile(line => !line.Contains("<system:String x:Key="))
                     .TakeWhile(line => !line.Trim().StartsWith("</ResourceDictionary>", StringComparison.Ordinal))
+                    // Filter out potential empty lines within the resource block as well
+                    .Where(line => !string.IsNullOrWhiteSpace(line))
                     .ToList();
                 var footerLines = lines.Skip(headerLines.Count + resourceLines.Count).ToList();
 
+                // ---- New code: Remove trailing empty/whitespace lines from the header ----
+                while (headerLines.Count > 0 && string.IsNullOrWhiteSpace(headerLines[^1]))
+                {
+                    headerLines.RemoveAt(headerLines.Count - 1);
+                }
+                // ---- End of new code ----
 
                 // Sort resource lines
                 var sortedResourceLines = resourceLines.OrderBy(ExtractKey).ToList();
 
                 // Combine all lines
                 var outputLines = headerLines.Concat(sortedResourceLines).Concat(footerLines).ToList();
-
 
                 // Write the output to the new file
                 var outputFile = Path.Combine(outputFolder, Path.GetFileName(file));
@@ -98,7 +105,7 @@ public partial class MainWindow
 
         start += 7; // Move past "x:Key=\""
 
-        var end = line.IndexOf("\"", start, StringComparison.Ordinal);
+        var end = line.IndexOf('"', start);
 
         if (end == -1)
         {

@@ -22,11 +22,10 @@ public partial class MainWindow
     private void BrowseInputButton_Click(object sender, RoutedEventArgs e)
     {
         var selectedFolder = SelectFolder("Select Input Folder");
-        if (!string.IsNullOrEmpty(selectedFolder))
-        {
-            InputFolderTextBox.Text = selectedFolder;
-            UpdateProcessButtonState();
-        }
+        if (string.IsNullOrEmpty(selectedFolder)) return;
+
+        InputFolderTextBox.Text = selectedFolder;
+        UpdateProcessButtonState();
     }
 
     /// <summary>
@@ -35,11 +34,10 @@ public partial class MainWindow
     private void BrowseOutputButton_Click(object sender, RoutedEventArgs e)
     {
         var selectedFolder = SelectFolder("Select Folder to Save Report");
-        if (!string.IsNullOrEmpty(selectedFolder))
-        {
-            OutputFolderTextBox.Text = selectedFolder;
-            UpdateProcessButtonState();
-        }
+        if (string.IsNullOrEmpty(selectedFolder)) return;
+
+        OutputFolderTextBox.Text = selectedFolder;
+        UpdateProcessButtonState();
     }
 
     /// <summary>
@@ -56,51 +54,55 @@ public partial class MainWindow
     /// </summary>
     private async void ProcessButton_Click(object sender, RoutedEventArgs e)
     {
-        var inputFolder = InputFolderTextBox.Text;
-        var reportFolder = OutputFolderTextBox.Text;
-
-        // Check if both folders are selected
-        if (string.IsNullOrEmpty(inputFolder) || string.IsNullOrEmpty(reportFolder))
-        {
-            System.Windows.MessageBox.Show("Please select both input and output folders.",
-                "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        // Disable the UI elements during processing
-        SetControlsEnabled(false);
-
-        // Dictionary to hold key and a set of fallback values found.
-        var resourceDictionary = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
-
-        // Define valid file extensions to scan.
-        var validExtensions = new[] { ".txt", ".cs", ".xaml", ".json", ".xml" };
-
-        // Regex pattern to match the desired pattern.
-        // This regex matches: TryFindResource("KEY") ?? "VALUE"
-        const string pattern = @"TryFindResource\(\s*""(?<key>[^""]+)""\s*\)\s*\?\?\s*""(?<value>[^""]+)""";
-
         try
         {
-            // Enumerate files in the selected input folder.
-            foreach (var file in Directory.EnumerateFiles(inputFolder, "*.*", SearchOption.AllDirectories))
+            var inputFolder = InputFolderTextBox.Text;
+            var reportFolder = OutputFolderTextBox.Text;
+
+            // Check if both folders are selected
+            if (string.IsNullOrEmpty(inputFolder) || string.IsNullOrEmpty(reportFolder))
             {
-                // Only process files with valid extensions.
-                if (!validExtensions.Contains(Path.GetExtension(file).ToLower()))
-                {
-                    continue;
-                }
+                System.Windows.MessageBox.Show("Please select both input and output folders.",
+                    "Missing Information", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
 
-                try
-                {
-                    var content = await File.ReadAllTextAsync(file);
+            // Disable the UI elements during processing
+            SetControlsEnabled(false);
 
-                    // Find all matches in the file.
-                    var matches = Regex.Matches(content, pattern);
-                    foreach (Match match in matches)
+            // Dictionary to hold key and a set of fallback values found.
+            var resourceDictionary = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+
+            // Define valid file extensions to scan.
+            var validExtensions = new[] { ".txt", ".cs", ".xaml", ".json", ".xml" };
+
+            // Regex pattern to match the desired pattern.
+            // This regex matches: TryFindResource("KEY") ?? "VALUE"
+            const string pattern = """
+                                   TryFindResource\(\s*"(?<key>[^"]+)"\s*\)\s*\?\?\s*"(?<value>[^"]+)"
+                                   """;
+
+            try
+            {
+                // Enumerate files in the selected input folder.
+                foreach (var file in Directory.EnumerateFiles(inputFolder, "*.*", SearchOption.AllDirectories))
+                {
+                    // Only process files with valid extensions.
+                    if (!validExtensions.Contains(Path.GetExtension(file).ToLowerInvariant()))
                     {
-                        if (match.Success)
+                        continue;
+                    }
+
+                    try
+                    {
+                        var content = await File.ReadAllTextAsync(file);
+
+                        // Find all matches in the file.
+                        var matches = Regex.Matches(content, pattern);
+                        foreach (Match match in matches)
                         {
+                            if (!match.Success) continue;
+
                             var key = match.Groups["key"].Value;
                             var value = match.Groups["value"].Value;
 
@@ -112,63 +114,68 @@ public partial class MainWindow
                             resourceDictionary[key].Add(value);
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Error processing file {file}: {ex.Message}");
-                }
-            }
-
-            // Prepare a list of keys that have multiple (mismatched) fallback values.
-            var mismatchedEntries = resourceDictionary
-                .Where(entry => entry.Value.Count > 1)
-                .ToList();
-
-            // Generate the report.
-            var reportFilePath = Path.Combine(reportFolder, "MismatchReport.txt");
-            await using (var writer = new StreamWriter(reportFilePath))
-            {
-                await writer.WriteLineAsync("Resource Key Mismatch Report");
-                await writer.WriteLineAsync("============================");
-                await writer.WriteLineAsync($"Total Keys Scanned: {resourceDictionary.Count}");
-                await writer.WriteLineAsync($"Keys with mismatched values: {mismatchedEntries.Count}");
-                await writer.WriteLineAsync();
-
-                if (mismatchedEntries.Any())
-                {
-                    foreach (var entry in mismatchedEntries)
+                    catch (Exception ex)
                     {
-                        await writer.WriteLineAsync($"Key: {entry.Key}");
-                        await writer.WriteLineAsync("Values Found:");
-                        foreach (var val in entry.Value)
-                        {
-                            await writer.WriteLineAsync($" - {val}");
-                        }
-
-                        await writer.WriteLineAsync(new string('-', 40));
+                        System.Diagnostics.Debug.WriteLine($"Error processing file {file}: {ex.Message}");
                     }
                 }
-                else
+
+                // Prepare a list of keys that have multiple (mismatched) fallback values.
+                var mismatchedEntries = resourceDictionary
+                    .Where(entry => entry.Value.Count > 1)
+                    .ToList();
+
+                // Generate the report.
+                var reportFilePath = Path.Combine(reportFolder, "MismatchReport.txt");
+                await using (var writer = new StreamWriter(reportFilePath))
                 {
-                    await writer.WriteLineAsync("No mismatched resource strings were found.");
+                    await writer.WriteLineAsync("Resource Key Mismatch Report");
+                    await writer.WriteLineAsync("============================");
+                    await writer.WriteLineAsync($"Total Keys Scanned: {resourceDictionary.Count}");
+                    await writer.WriteLineAsync($"Keys with mismatched values: {mismatchedEntries.Count}");
+                    await writer.WriteLineAsync();
+
+                    if (mismatchedEntries.Count != 0)
+                    {
+                        foreach (var entry in mismatchedEntries)
+                        {
+                            await writer.WriteLineAsync($"Key: {entry.Key}");
+                            await writer.WriteLineAsync("Values Found:");
+                            foreach (var val in entry.Value)
+                            {
+                                await writer.WriteLineAsync($" - {val}");
+                            }
+
+                            await writer.WriteLineAsync(new string('-', 40));
+                        }
+                    }
+                    else
+                    {
+                        await writer.WriteLineAsync("No mismatched resource strings were found.");
+                    }
                 }
+
+                _lastGeneratedReportPath = Path.Combine(reportFolder, "MismatchReport.txt");
+                OpenReportButton.IsEnabled = File.Exists(_lastGeneratedReportPath);
+
+                System.Windows.MessageBox.Show($"Report generated successfully at:\n{reportFilePath}",
+                    "Success", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-
-            _lastGeneratedReportPath = Path.Combine(reportFolder, "MismatchReport.txt");
-            OpenReportButton.IsEnabled = File.Exists(_lastGeneratedReportPath);
-
-            System.Windows.MessageBox.Show($"Report generated successfully at:\n{reportFilePath}",
-                "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            catch (Exception ex)
+            {
+                System.Windows.MessageBox.Show($"An error occurred:\n{ex.Message}",
+                    "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                // Re-enable UI elements
+                SetControlsEnabled(true);
+            }
         }
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show($"An error occurred:\n{ex.Message}",
                 "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-        finally
-        {
-            // Re-enable UI elements
-            SetControlsEnabled(true);
         }
     }
 
@@ -233,6 +240,7 @@ public partial class MainWindow
     }
 }
 
+/// <inheritdoc />
 /// <summary>
 /// Converter to enable/disable the Process button based on whether strings are empty
 /// </summary>

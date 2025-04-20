@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Diagnostics;
+using System.Globalization;
 
 namespace DetectMissingKeys;
 
@@ -27,39 +28,36 @@ public partial class MainWindow
             Title = "Select the Original XAML File"
         };
 
-        if (openFileDialog.ShowDialog() == true)
-        {
-            _originalFilePath = openFileDialog.FileName;
-            Console.WriteLine($"Original file selected: {_originalFilePath}");
-            StatusTextBlock.Text = $"Original file selected: {_originalFilePath}";
-            OriginalFileTextBox.Text = _originalFilePath;
-        }
+        if (openFileDialog.ShowDialog() != true) return;
+
+        _originalFilePath = openFileDialog.FileName;
+        Console.WriteLine($"Original file selected: {_originalFilePath}");
+        StatusTextBlock.Text = $"Original file selected: {_originalFilePath}";
+        OriginalFileTextBox.Text = _originalFilePath;
     }
 
     private void SelectInputFolderButton_Click(object sender, RoutedEventArgs e)
     {
         using var folderDialog = new FolderBrowserDialog();
         folderDialog.Description = "Select Input Folder";
-        if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        {
-            _inputFolderPath = folderDialog.SelectedPath;
-            Console.WriteLine($"Input folder selected: {_inputFolderPath}");
-            StatusTextBlock.Text = $"Input folder selected: {_inputFolderPath}";
-            InputFolderTextBox.Text = _inputFolderPath;
-        }
+        if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        _inputFolderPath = folderDialog.SelectedPath;
+        Console.WriteLine($"Input folder selected: {_inputFolderPath}");
+        StatusTextBlock.Text = $"Input folder selected: {_inputFolderPath}";
+        InputFolderTextBox.Text = _inputFolderPath;
     }
 
     private void SelectOutputFolderButton_Click(object sender, RoutedEventArgs e)
     {
         using var folderDialog = new FolderBrowserDialog();
         folderDialog.Description = "Select Output Folder";
-        if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
-        {
-            _outputFolderPath = folderDialog.SelectedPath;
-            Console.WriteLine($"Output folder selected: {_outputFolderPath}");
-            StatusTextBlock.Text = $"Output folder selected: {_outputFolderPath}";
-            OutputFolderTextBox.Text = _outputFolderPath;
-        }
+        if (folderDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
+
+        _outputFolderPath = folderDialog.SelectedPath;
+        Console.WriteLine($"Output folder selected: {_outputFolderPath}");
+        StatusTextBlock.Text = $"Output folder selected: {_outputFolderPath}";
+        OutputFolderTextBox.Text = _outputFolderPath;
     }
 
     private void GenerateReportButton_Click(object sender, RoutedEventArgs e)
@@ -88,18 +86,18 @@ public partial class MainWindow
                 var missingKeys = originalKeys.Except(fileKeys).ToList();
                 var extraKeys = fileKeys.Except(originalKeys).ToList();
 
-                report.AppendLine($"File: {Path.GetFileName(file)}");
+                report.AppendLine(CultureInfo.InvariantCulture, $"File: {Path.GetFileName(file)}");
                 if (missingKeys.Count != 0)
                 {
                     report.AppendLine("  Missing Keys:");
-                    missingKeys.ForEach(key => report.AppendLine($"    - {key}"));
+                    missingKeys.ForEach(key => report.AppendLine(CultureInfo.InvariantCulture, $"    - {key}"));
                     Console.WriteLine($"Missing keys in {Path.GetFileName(file)}: {string.Join(", ", missingKeys)}");
                 }
 
                 if (extraKeys.Count != 0)
                 {
                     report.AppendLine("  Extra Keys:");
-                    extraKeys.ForEach(key => report.AppendLine($"    - {key}"));
+                    extraKeys.ForEach(key => report.AppendLine(CultureInfo.InvariantCulture, $"    - {key}"));
                     Console.WriteLine($"Extra keys in {Path.GetFileName(file)}: {string.Join(", ", extraKeys)}");
                 }
 

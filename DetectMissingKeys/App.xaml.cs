@@ -1,5 +1,6 @@
 ﻿namespace DetectMissingKeys;
 
+/// <inheritdoc />
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>

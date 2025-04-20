@@ -1,5 +1,6 @@
 ﻿namespace OrdenateResourceStrings;
 
+/// <inheritdoc />
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>

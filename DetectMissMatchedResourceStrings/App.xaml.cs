@@ -1,5 +1,6 @@
 ﻿namespace DetectMissMatchedResourceStrings;
 
+/// <inheritdoc />
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
