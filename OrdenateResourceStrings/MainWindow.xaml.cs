@@ -73,11 +73,22 @@ public partial class MainWindow
                 }
                 // ---- End of new code ----
 
-                // Sort resource lines
-                var sortedResourceLines = resourceLines.OrderBy(ExtractKey).ToList();
+                // Process resource lines: Keep only the first occurrence of each key, then sort
+                var uniqueResourceLines = new Dictionary<string, string>(); // Key: x:Key value, Value: The line
+                foreach (var line in resourceLines)
+                {
+                    var key = ExtractKey(line);
+                    if (!string.IsNullOrEmpty(key) && !uniqueResourceLines.ContainsKey(key))
+                    {
+                        uniqueResourceLines[key] = line; // Keep the first occurrence
+                    }
+                }
+
+                // Now sort the unique lines by key
+                var sortedUniqueResourceLines = uniqueResourceLines.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
 
                 // Combine all lines
-                var outputLines = headerLines.Concat(sortedResourceLines).Concat(footerLines).ToList();
+                var outputLines = headerLines.Concat(sortedUniqueResourceLines).Concat(footerLines).ToList();
 
                 // Write the output to the new file
                 var outputFile = Path.Combine(outputFolder, Path.GetFileName(file));
