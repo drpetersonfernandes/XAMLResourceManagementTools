@@ -58,24 +58,35 @@ public partial class MainWindow
                 var lines = File.ReadAllLines(file).ToList();
 
                 // Separate header, resource strings, and footer
-                var headerLines = lines.TakeWhile(line => !line.Contains("<system:String x:Key=")).ToList();
-                var resourceLines = lines.SkipWhile(line => !line.Contains("<system:String x:Key="))
-                    .TakeWhile(line => !line.Trim().StartsWith("</ResourceDictionary>", StringComparison.Ordinal))
-                    // Filter out potential empty lines within the resource block as well
-                    .Where(line => !string.IsNullOrWhiteSpace(line))
-                    .ToList();
-                var footerLines = lines.Skip(headerLines.Count + resourceLines.Count).ToList();
+                var headerLines = lines.TakeWhile(static line => !line.Contains("<system:String x:Key=")).ToList();
 
-                // ---- New code: Remove trailing empty/whitespace lines from the header ----
+                // Identify the full span of lines that could contain resource strings,
+                // before any filtering of empty lines within this block.
+                var resourceBlockUnfiltered = lines
+                    .Skip(headerLines.Count)
+                    .TakeWhile(static line => !line.Trim().StartsWith("</ResourceDictionary>", StringComparison.Ordinal))
+                    .ToList();
+
+                // The actual resource lines to be processed are filtered from this block.
+                // This keeps the original intent of filtering out empty lines within the resource section.
+                var resourceLinesToProcess = resourceBlockUnfiltered
+                    .Where(static line => !string.IsNullOrWhiteSpace(line)) // Filter out empty/whitespace lines
+                    .ToList();
+
+                // The footer starts after the header and the *unfiltered* resource block.
+                var footerLines = lines
+                    .Skip(headerLines.Count + resourceBlockUnfiltered.Count)
+                    .ToList();
+
+                // Remove trailing empty/whitespace lines from the header
                 while (headerLines.Count > 0 && string.IsNullOrWhiteSpace(headerLines[^1]))
                 {
                     headerLines.RemoveAt(headerLines.Count - 1);
                 }
-                // ---- End of new code ----
 
                 // Process resource lines: Keep only the first occurrence of each key, then sort
                 var uniqueResourceLines = new Dictionary<string, string>(); // Key: x:Key value, Value: The line
-                foreach (var line in resourceLines)
+                foreach (var line in resourceLinesToProcess) // Iterate over the correctly filtered resource lines
                 {
                     var key = ExtractKey(line);
                     if (!string.IsNullOrEmpty(key) && !uniqueResourceLines.ContainsKey(key))
@@ -109,9 +120,7 @@ public partial class MainWindow
 
         if (start == -1)
         {
-            // Handle cases where x:Key is not in the expected format
-            // You might want to log this or throw a more specific exception
-            return ""; // Or some other default value
+            return "";
         }
 
         start += 7; // Move past "x:Key=\""
@@ -120,8 +129,7 @@ public partial class MainWindow
 
         if (end == -1)
         {
-            // Handle the missing closing quote
-            return ""; // Or handle differently
+            return "";
         }
 
         return line.Substring(start, end - start);
