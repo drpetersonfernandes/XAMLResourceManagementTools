@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Forms;
@@ -13,6 +13,7 @@ namespace DetectResourceStrings;
 public partial class MainWindow
 {
     private string? _reportFilePath;
+    private List<string> _unmatchedStringsFromResource = new();
 
     public MainWindow()
     {
@@ -149,6 +150,7 @@ public partial class MainWindow
                 var matchedStrings = list1.Intersect(list2).ToList();
                 var unmatchedStringsFromInput = list1.Except(list2).ToList();
                 var unmatchedStringsFromResource = list2.Except(list1).ToList();
+                _unmatchedStringsFromResource = unmatchedStringsFromResource;
 
                 // Generate the report
                 var reportFilePath = Path.Combine(reportPath, "report.txt");
@@ -172,7 +174,7 @@ public partial class MainWindow
                 }
 
                 _reportFilePath = reportFilePath;
-                UpdateReportButtonState();
+                UpdateActionButtonsState();
 
                 MessageBox.Show($"Report generated at: {reportFilePath}",
                     "Success", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -210,10 +212,82 @@ public partial class MainWindow
         {
             MessageBox.Show("Report file not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             // Update button state in the case file was deleted
-            UpdateReportButtonState();
+            UpdateActionButtonsState();
         }
     }
 
+    private async void CleanUpButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (_unmatchedStringsFromResource.Count == 0)
+            {
+                MessageBox.Show("No unused resource strings were found in the last analysis.", "No Action Needed",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+
+            var openFileDialog = new OpenFileDialog
+            {
+                Title = "Select XAML Resource Files to Clean Up",
+                Filter = "XAML Files (*.xaml)|*.xaml",
+                Multiselect = true
+            };
+
+            if (openFileDialog.ShowDialog() != true) return;
+
+            var filesToClean = openFileDialog.FileNames;
+            var filesModified = 0;
+            var linesRemoved = 0;
+
+            try
+            {
+                SetControlsEnabled(false);
+
+                // Use a hash set for efficient lookups of keys to remove
+                var keysToRemove = new HashSet<string>(_unmatchedStringsFromResource);
+
+                foreach (var filePath in filesToClean)
+                {
+                    try
+                    {
+                        var lines = (await File.ReadAllLinesAsync(filePath)).ToList();
+
+                        var removedCount = lines.RemoveAll(line =>
+                        {
+                            var key = ExtractKey(line);
+                            return key != null && keysToRemove.Contains(key);
+                        });
+
+                        if (removedCount > 0)
+                        {
+                            await File.WriteAllLinesAsync(filePath, lines);
+                            linesRemoved += removedCount;
+                            filesModified++;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine($"Failed to process file {filePath}: {ex.Message}");
+                    }
+                }
+
+                MessageBox.Show($"Cleanup complete.\n\nFiles modified: {filesModified}\nTotal lines removed: {linesRemoved}", "Cleanup Successful", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"An error occurred during the cleanup process: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                SetControlsEnabled(true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"An error occurred during the cleanup process: {ex.Message}");
+        }
+    }
 
     /// <summary>
     /// Helper method to enable or disable all controls during processing
@@ -226,6 +300,18 @@ public partial class MainWindow
         CompareButton.IsEnabled = enabled && !string.IsNullOrEmpty(InputFolderTextBox.Text) &&
                                   !string.IsNullOrEmpty(ResourceFileTextBox.Text) &&
                                   !string.IsNullOrEmpty(OutputFolderTextBox.Text);
+
+        // The state of these buttons depends on the analysis result,
+        // so we only disable them when processing and re-evaluate when enabling.
+        if (enabled)
+        {
+            UpdateActionButtonsState();
+        }
+        else
+        {
+            OpenReportButton.IsEnabled = false;
+            CleanUpButton.IsEnabled = false;
+        }
     }
 
     private static string? SelectFolder(string description)
@@ -256,10 +342,19 @@ public partial class MainWindow
         return null;
     }
 
-    private void UpdateReportButtonState()
+    private void UpdateActionButtonsState()
     {
-        // Enable button only if the report file exists
+        // Enable Open Report button only if the report file exists
         OpenReportButton.IsEnabled = !string.IsNullOrEmpty(_reportFilePath) && File.Exists(_reportFilePath);
+        // Enable Clean Up button only if there are unused resource strings
+        CleanUpButton.IsEnabled = _unmatchedStringsFromResource.Count > 0;
+    }
+
+    private static string? ExtractKey(string line)
+    {
+        // Use the existing generated regex to find the key
+        var match = MyRegex().Match(line);
+        return match.Success ? match.Groups[1].Value : null;
     }
 
     [GeneratedRegex("x:Key=\"(.*?)\"")]
