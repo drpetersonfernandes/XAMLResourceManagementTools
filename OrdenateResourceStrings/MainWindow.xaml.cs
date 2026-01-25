@@ -89,14 +89,15 @@ public partial class MainWindow
                 foreach (var line in resourceLinesToProcess) // Iterate over the correctly filtered resource lines
                 {
                     var key = ExtractKey(line);
-                    if (!string.IsNullOrEmpty(key) && !uniqueResourceLines.ContainsKey(key))
+                    if (!string.IsNullOrEmpty(key))
                     {
-                        uniqueResourceLines[key] = line; // Keep the first occurrence
+                        uniqueResourceLines.TryAdd(key, line);
+                        // Keep the first occurrence
                     }
                 }
 
                 // Now sort the unique lines by key
-                var sortedUniqueResourceLines = uniqueResourceLines.OrderBy(kvp => kvp.Key).Select(kvp => kvp.Value).ToList();
+                var sortedUniqueResourceLines = uniqueResourceLines.OrderBy(static kvp => kvp.Key).Select(static kvp => kvp.Value).ToList();
 
                 // Combine all lines
                 var outputLines = headerLines.Concat(sortedUniqueResourceLines).Concat(footerLines).ToList();

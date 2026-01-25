@@ -78,9 +78,6 @@ public partial class MainWindow
 
             // Regex pattern to match the desired pattern.
             // This regex matches: TryFindResource("KEY") ?? "VALUE"
-            const string pattern = """
-                                   TryFindResource\(\s*"(?<key>[^"]+)"\s*\)\s*\?\?\s*"(?<value>[^"]+)"
-                                   """;
 
             try
             {
@@ -98,7 +95,7 @@ public partial class MainWindow
                         var content = await File.ReadAllTextAsync(file);
 
                         // Find all matches in the file.
-                        var matches = Regex.Matches(content, pattern);
+                        var matches = MyRegex().Matches(content);
                         foreach (Match match in matches)
                         {
                             if (!match.Success) continue;
@@ -106,12 +103,13 @@ public partial class MainWindow
                             var key = match.Groups["key"].Value;
                             var value = match.Groups["value"].Value;
 
-                            if (!resourceDictionary.ContainsKey(key))
+                            if (!resourceDictionary.TryGetValue(key, out var value1))
                             {
-                                resourceDictionary[key] = new HashSet<string>(StringComparer.Ordinal);
+                                value1 = new HashSet<string>(StringComparer.Ordinal);
+                                resourceDictionary[key] = value1;
                             }
 
-                            resourceDictionary[key].Add(value);
+                            value1.Add(value);
                         }
                     }
                     catch (Exception ex)
@@ -122,7 +120,7 @@ public partial class MainWindow
 
                 // Prepare a list of keys that have multiple (mismatched) fallback values.
                 var mismatchedEntries = resourceDictionary
-                    .Where(entry => entry.Value.Count > 1)
+                    .Where(static entry => entry.Value.Count > 1)
                     .ToList();
 
                 // Generate the report.
@@ -238,6 +236,11 @@ public partial class MainWindow
             return null;
         }
     }
+
+    [GeneratedRegex("""
+                    TryFindResource\(\s*"(?<key>[^"]+)"\s*\)\s*\?\?\s*"(?<value>[^"]+)"
+                    """)]
+    private static partial Regex MyRegex();
 }
 
 /// <inheritdoc />

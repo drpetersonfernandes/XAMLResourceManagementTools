@@ -162,7 +162,7 @@ public partial class MainWindow
 
             foreach (var element in xDocument.Descendants())
             {
-                var keyAttribute = element.Attributes().FirstOrDefault(attr => attr.Name.LocalName == "Key");
+                var keyAttribute = element.Attributes().FirstOrDefault(static attr => attr.Name.LocalName == "Key");
                 if (keyAttribute != null)
                 {
                     keys.Add(keyAttribute.Value);
