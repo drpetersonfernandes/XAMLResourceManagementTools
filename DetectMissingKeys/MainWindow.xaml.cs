@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Text;
 using System.Windows;
 using System.Windows.Forms;
@@ -72,7 +72,8 @@ public partial class MainWindow
         try
         {
             Console.WriteLine("Extracting keys from the original file...");
-            var originalKeys = ExtractKeys(_originalFilePath);
+            var originalKeysData = ExtractKeysWithContent(_originalFilePath);
+            var originalKeys = originalKeysData.Keys.ToHashSet();
             Console.WriteLine($"Extracted {originalKeys.Count} keys from the original file.");
 
             var report = new StringBuilder();
@@ -90,7 +91,18 @@ public partial class MainWindow
                 if (missingKeys.Count != 0)
                 {
                     report.AppendLine("  Missing Keys:");
-                    missingKeys.ForEach(key => report.AppendLine(CultureInfo.InvariantCulture, $"    - {key}"));
+                    foreach (var key in missingKeys)
+                    {
+                        if (originalKeysData.TryGetValue(key, out var lineContent))
+                        {
+                            report.AppendLine(CultureInfo.InvariantCulture, $"    - {lineContent}");
+                        }
+                        else
+                        {
+                            report.AppendLine(CultureInfo.InvariantCulture, $"    - {key}");
+                        }
+                    }
+
                     Console.WriteLine($"Missing keys in {Path.GetFileName(file)}: {string.Join(", ", missingKeys)}");
                 }
 
@@ -151,6 +163,103 @@ public partial class MainWindow
         {
             StatusTextBlock.Text = "Report file not found. Please generate the report first.";
         }
+    }
+
+    private void DeleteExtraKeysButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_originalFilePath))
+        {
+            StatusTextBlock.Text = "Please select the reference XAML file first.";
+            return;
+        }
+
+        var openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Filter = "XAML Files (*.xaml)|*.xaml",
+            Title = "Select XAML Files to Remove Extra Keys",
+            Multiselect = true
+        };
+
+        if (openFileDialog.ShowDialog() != true) return;
+
+        var referenceKeys = ExtractKeys(_originalFilePath).ToHashSet();
+        var processedCount = 0;
+        var removedCount = 0;
+        var errors = new StringBuilder();
+
+        foreach (var filePath in openFileDialog.FileNames)
+        {
+            try
+            {
+                var doc = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
+                var elementsToRemove = new List<XElement>();
+
+                // Find all elements with keys that don't exist in the reference file
+                foreach (var element in doc.Descendants())
+                {
+                    var keyAttr = element.Attributes().FirstOrDefault(static a => a.Name.LocalName == "Key");
+                    if (keyAttr != null && !referenceKeys.Contains(keyAttr.Value))
+                    {
+                        elementsToRemove.Add(element);
+                    }
+                }
+
+                if (elementsToRemove.Count > 0)
+                {
+                    // Remove the elements (entire XML nodes/lines)
+                    foreach (var elem in elementsToRemove)
+                    {
+                        elem.Remove();
+                    }
+
+                    // Save back to the same file
+                    doc.Save(filePath);
+
+                    removedCount += elementsToRemove.Count;
+                    processedCount++;
+                    Console.WriteLine($"Removed {elementsToRemove.Count} extra keys from {Path.GetFileName(filePath)}");
+                }
+            }
+            catch (Exception ex)
+            {
+                errors.AppendLine(CultureInfo.InvariantCulture, $"Error in {Path.GetFileName(filePath)}: {ex.Message}");
+            }
+        }
+
+        var status = $"Cleanup complete. Processed {processedCount} files, removed {removedCount} extra key entries.";
+        if (errors.Length > 0)
+        {
+            status += $" Errors: {errors}";
+        }
+
+        StatusTextBlock.Text = status;
+    }
+
+    private static Dictionary<string, string> ExtractKeysWithContent(string filePath)
+    {
+        var keys = new Dictionary<string, string>();
+        try
+        {
+            var xDocument = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
+
+            foreach (var element in xDocument.Descendants())
+            {
+                var keyAttribute = element.Attributes().FirstOrDefault(static attr => attr.Name.LocalName == "Key");
+                if (keyAttribute != null)
+                {
+                    // Store the full XML representation of the element (the "entire line")
+                    keys[keyAttribute.Value] = element.ToString();
+                }
+            }
+
+            Console.WriteLine($"Extracted {keys.Count} keys with content from {Path.GetFileName(filePath)}.");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error parsing file {filePath}: {ex.Message}");
+        }
+
+        return keys;
     }
 
     private static List<string> ExtractKeys(string filePath)
