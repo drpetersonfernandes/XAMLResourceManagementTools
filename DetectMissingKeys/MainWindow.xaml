@@ -6,170 +6,171 @@
         Title="XAML Key Comparer" Height="600" Width="650">
     <Grid Margin="20">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        
+
         <!-- Header and Description -->
-        <TextBlock Grid.Row="0" 
-                   Text="XAML Resource Key Comparison Tool" 
-                   FontSize="20" FontWeight="Bold" 
-                   TextAlignment="Center" 
-                   Margin="0,0,0,10"/>
-                   
-        <TextBlock Grid.Row="1" 
+        <TextBlock Grid.Row="0"
+                   Text="XAML Resource Key Comparison Tool"
+                   FontSize="20" FontWeight="Bold"
+                   TextAlignment="Center"
+                   Margin="0,0,0,10" />
+
+        <TextBlock Grid.Row="1"
                    TextWrapping="Wrap"
                    TextAlignment="Center"
                    Margin="0,0,0,20">
             This tool compares resource keys between XAML files to identify missing or extra keys.
             It helps ensure consistency across localized resource files or detect resource key discrepancies.
         </TextBlock>
-        
+
         <!-- Original File Selection -->
-        <TextBlock Grid.Row="2" 
-                   Text="Reference XAML File:" 
-                   Margin="0,0,0,5" 
-                   FontWeight="SemiBold"/>
-                   
-        <TextBlock Grid.Row="2" 
-                   Text="(The master file containing the expected set of keys)" 
+        <TextBlock Grid.Row="2"
+                   Text="Reference XAML File:"
+                   Margin="0,0,0,5"
+                   FontWeight="SemiBold" />
+
+        <TextBlock Grid.Row="2"
+                   Text="(The master file containing the expected set of keys)"
                    HorizontalAlignment="Right"
                    FontStyle="Italic"
                    FontSize="11"
-                   Foreground="#555555"/>
-        
+                   Foreground="#555555" />
+
         <Grid Grid.Row="3" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Name="OriginalFileTextBox" 
-                     Grid.Column="0" 
+            <TextBox Name="OriginalFileTextBox"
+                     Grid.Column="0"
                      IsReadOnly="True"
                      Padding="5,3"
                      Text="{Binding OriginalFilePath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
-            <Button Name="SelectOriginalFileButton" 
+            <Button Name="SelectOriginalFileButton"
                     Grid.Column="1"
-                    Content="Browse..." 
-                    Width="80" 
+                    Content="Browse..."
+                    Width="80"
                     Margin="10,0,0,0"
-                    Click="SelectOriginalFileButton_Click"/>
+                    Click="SelectOriginalFileButton_Click" />
         </Grid>
-        
+
         <!-- Input Folder Selection -->
-        <TextBlock Grid.Row="4" 
-                   Text="Input Folder:" 
-                   Margin="0,0,0,5" 
-                   FontWeight="SemiBold"/>
-                   
-        <TextBlock Grid.Row="4" 
-                   Text="(Folder containing XAML files to check against the reference)" 
+        <TextBlock Grid.Row="4"
+                   Text="Input Folder:"
+                   Margin="0,0,0,5"
+                   FontWeight="SemiBold" />
+
+        <TextBlock Grid.Row="4"
+                   Text="(Folder containing XAML files to check against the reference)"
                    HorizontalAlignment="Right"
                    FontStyle="Italic"
                    FontSize="11"
-                   Foreground="#555555"/>
-        
+                   Foreground="#555555" />
+
         <Grid Grid.Row="5" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Name="InputFolderTextBox" 
-                     Grid.Column="0" 
+            <TextBox Name="InputFolderTextBox"
+                     Grid.Column="0"
                      IsReadOnly="True"
                      Padding="5,3"
                      Text="{Binding InputFolderPath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
-            <Button Name="SelectInputFolderButton" 
-                    Grid.Column="1" 
-                    Content="Browse..." 
-                    Width="80" 
+            <Button Name="SelectInputFolderButton"
+                    Grid.Column="1"
+                    Content="Browse..."
+                    Width="80"
                     Margin="10,0,0,0"
-                    Click="SelectInputFolderButton_Click"/>
+                    Click="SelectInputFolderButton_Click" />
         </Grid>
-        
+
         <!-- Output Folder Selection -->
-        <TextBlock Grid.Row="6" 
-                   Text="Output Folder:" 
-                   Margin="0,0,0,5" 
-                   FontWeight="SemiBold"/>
-                   
-        <TextBlock Grid.Row="6" 
-                   Text="(Where to save the comparison report)" 
+        <TextBlock Grid.Row="6"
+                   Text="Output Folder:"
+                   Margin="0,0,0,5"
+                   FontWeight="SemiBold" />
+
+        <TextBlock Grid.Row="6"
+                   Text="(Where to save the comparison report)"
                    HorizontalAlignment="Right"
                    FontStyle="Italic"
                    FontSize="11"
-                   Foreground="#555555"/>
-        
+                   Foreground="#555555" />
+
         <Grid Grid.Row="7" Margin="0,0,0,15">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-            <TextBox Name="OutputFolderTextBox" 
-                     Grid.Column="0" 
+            <TextBox Name="OutputFolderTextBox"
+                     Grid.Column="0"
                      IsReadOnly="True"
                      Padding="5,3"
                      Text="{Binding OutputFolderPath, Mode=OneWay}" d:DataContext="{d:DesignInstance }" />
-            <Button Name="SelectOutputFolderButton" 
-                    Grid.Column="1" 
-                    Content="Browse..." 
-                    Width="80" 
+            <Button Name="SelectOutputFolderButton"
+                    Grid.Column="1"
+                    Content="Browse..."
+                    Width="80"
                     Margin="10,0,0,0"
-                    Click="SelectOutputFolderButton_Click"/>
+                    Click="SelectOutputFolderButton_Click" />
         </Grid>
-        
+
         <!-- Process Button and Explanation -->
         <StackPanel Grid.Row="8">
-            <Button Name="GenerateReportButton" 
-                    Content="Generate Comparison Report" 
-                    Width="220" 
+            <Button Name="GenerateReportButton"
+                    Content="Generate Comparison Report"
+                    Width="220"
                     Height="40"
                     FontWeight="Bold"
                     HorizontalAlignment="Center"
                     Margin="0,10,0,15"
-                    Click="GenerateReportButton_Click"/>
-            
+                    Click="GenerateReportButton_Click" />
+
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10,0,30">
                 <Button Name="OpenReportButton"
-                        Content="Open Report" 
-                        Width="120" 
+                        Content="Open Report"
+                        Width="120"
                         Height="30"
                         IsEnabled="False"
-                        Click="OpenReportButton_Click"/>
+                        Click="OpenReportButton_Click" />
                 <Button Name="DeleteExtraKeysButton"
-                        Content="Delete Extra Keys" 
-                        Width="120" 
+                        Content="Delete Extra Keys"
+                        Width="120"
                         Height="30"
                         Margin="10,0,0,0"
-                        Click="DeleteExtraKeysButton_Click"/>
+                        IsEnabled="False"
+                        Click="DeleteExtraKeysButton_Click" />
             </StackPanel>
-            
-            <TextBlock TextWrapping="Wrap" 
-                       TextAlignment="Center" 
-                       Margin="20,0,20,15" 
+
+            <TextBlock TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Margin="20,0,20,15"
                        Foreground="#555555">
                 The report will identify:
-                <LineBreak/>• Missing keys (keys present in reference file but missing from checked files)
-                <LineBreak/>• Extra keys (keys present in checked files but not in the reference file)
-                <LineBreak/>• Files with perfect key matches
+                <LineBreak />• Missing keys (keys present in reference file but missing from checked files)
+                <LineBreak />• Extra keys (keys present in checked files but not in the reference file)
+                <LineBreak />• Files with perfect key matches
             </TextBlock>
-            
+
             <!-- Status Display -->
-            <Border BorderBrush="#CCCCCC" 
-                    BorderThickness="1" 
-                    Margin="10,0,10,0" 
-                    Padding="10" 
+            <Border BorderBrush="#CCCCCC"
+                    BorderThickness="1"
+                    Margin="10,0,10,0"
+                    Padding="10"
                     Background="#F5F5F5">
-                <TextBlock Name="StatusTextBlock" 
-                           Text="Status: Waiting for input..." 
-                           TextWrapping="Wrap"/>
+                <TextBlock Name="StatusTextBlock"
+                           Text="Status: Waiting for input..."
+                           TextWrapping="Wrap" />
             </Border>
         </StackPanel>
     </Grid>

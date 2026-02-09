@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 using System.Windows.Forms;
 using System.Xml.Linq;
+using System.Xml;
 using System.Diagnostics;
 using System.Globalization;
 
@@ -77,6 +78,7 @@ public partial class MainWindow
             Console.WriteLine($"Extracted {originalKeys.Count} keys from the original file.");
 
             var report = new StringBuilder();
+            var hasAnyExtraKeys = false;
 
             foreach (var file in Directory.GetFiles(_inputFolderPath, "*.xaml"))
             {
@@ -108,6 +110,7 @@ public partial class MainWindow
 
                 if (extraKeys.Count != 0)
                 {
+                    hasAnyExtraKeys = true;
                     report.AppendLine("  Extra Keys:");
                     extraKeys.ForEach(key => report.AppendLine(CultureInfo.InvariantCulture, $"    - {key}"));
                     Console.WriteLine($"Extra keys in {Path.GetFileName(file)}: {string.Join(", ", extraKeys)}");
@@ -130,6 +133,7 @@ public partial class MainWindow
 
             // Enable the open report button
             OpenReportButton.IsEnabled = true;
+            DeleteExtraKeysButton.IsEnabled = hasAnyExtraKeys;
 
             StatusTextBlock.Text = $"Report generated successfully: {outputFilePath}";
             Console.WriteLine($"Report saved at: {outputFilePath}");
@@ -240,15 +244,18 @@ public partial class MainWindow
         var keys = new Dictionary<string, string>();
         try
         {
-            var xDocument = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
+            // Load with LineInfo to find the exact location in the source file
+            var xDocument = XDocument.Load(filePath, LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo);
+            var lines = File.ReadAllLines(filePath);
 
             foreach (var element in xDocument.Descendants())
             {
                 var keyAttribute = element.Attributes().FirstOrDefault(static attr => attr.Name.LocalName == "Key");
-                if (keyAttribute != null)
+                if (keyAttribute != null && element is IXmlLineInfo lineInfo && lineInfo.HasLineInfo())
                 {
-                    // Store the full XML representation of the element (the "entire line")
-                    keys[keyAttribute.Value] = element.ToString();
+                    // Extract the actual line text from the file to preserve prefixes (system:, x:, etc.)
+                    var originalLine = lines[lineInfo.LineNumber - 1].Trim();
+                    keys[keyAttribute.Value] = originalLine;
                 }
             }
 
